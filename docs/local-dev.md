@@ -103,7 +103,7 @@ enters a published image.
 
 ```bash
 # bump <version> in pom.xml, commit, then:
-git tag v0.1.3 && git push origin main v0.1.3
+git tag v0.2.1 && git push origin main v0.2.1
 ```
 
 The tag triggers the release pipeline (GitLab package registry + GitHub

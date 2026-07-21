@@ -5,7 +5,7 @@
 # snapshot: every main commit republishes the newest jar under the stable
 #           'snapshot' label -- for LOCAL podman testing only. lib.txt accepts
 #           released, sha256-pinned versions; a snapshot never enters an image.
-# release:  on tag (v0.1.0), uploads the JAR to the GitLab generic package
+# release:  on tag (vX.Y.Z), uploads the JAR to the GitLab generic package
 #           registry and prints the ready-to-paste lib.txt line for the
 #           openfire-oci repo.
 

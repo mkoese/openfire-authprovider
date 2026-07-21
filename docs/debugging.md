@@ -7,8 +7,9 @@ Diagnosing authentication behavior on a running Openfire that uses
 ## Confirm the provider is active
 
 ```
+# properties are nested XML (<provider><auth><className>), not dotted keys
 oc exec deployment/<release>-openfire -n openfire -- \
-  grep -A1 provider.auth.className /opt/openfire/conf/openfire.xml
+  grep -B1 -A1 className /opt/openfire/conf/openfire.xml
 ```
 
 Or in the admin console → *System Properties*: `provider.auth.className` should be
@@ -22,14 +23,17 @@ oc exec deployment/<release>-openfire -n openfire -- ls /opt/openfire/lib | grep
 
 ## Enable auth logging (info / debug / trace)
 
-The provider logs under the `com.mkoese.openfire.auth` category. Raise its level
-to see the decision flow — set a `<Logger>` in the image's `log4j2.xml` (live via
-`monitorInterval`) as described in
-[openfire-oci › logging](https://gitlab.com/mkoese/openfire-oci/-/blob/main/docs/logging.md):
+The provider logs under the `com.mkoese.openfire.auth` category. Raise its
+level to see the decision flow — the image wires it to an env var, so no file
+edit is needed (deployment rolls a new pod at the new level):
 
-```xml
-<Logger name="com.mkoese.openfire.auth" level="debug"/>   <!-- or trace -->
+```bash
+oc set env deployment/<release>-openfire OPENFIRE_LOG_LEVEL_AUTH=debug   # or trace
 ```
+
+For categories without an env var, a `<Logger>` in the image's `log4j2.xml`
+(live via `monitorInterval`) still works — see
+[openfire-oci › logging](https://gitlab.com/mkoese/openfire-oci/-/blob/main/docs/logging.md).
 
 **Every line logs usernames, decisions and outcomes only — never a password or
 credential** (enforced by `LoggingSafetyTest`).

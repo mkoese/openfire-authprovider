@@ -174,15 +174,18 @@ corporate Maven mirror that does **not** proxy Ignite Realtime, point Maven at a
 settings file that exempts the `igniterealtime` repo id from the mirror:
 
 ```bash
-mvn -s settings-igniterealtime.xml verify
+mvn -s settings-igniterealtime.xml verify   # create the file first: docs/local-dev.md
 # mirror: <mirrorOf>*,!igniterealtime</mirrorOf>
 ```
 
 ### 2. GitLab CI (with internet)
 
 `.gitlab-ci.yml` runs `mvn verify` on every push/MR (UBI9 OpenJDK 17 image,
-cached `.m2`). On a tag (`v0.1.1`) the `release` job uploads the JAR to the
-GitLab **generic package registry**:
+cached `.m2`); every main commit additionally republishes a rolling
+**snapshot** jar for local podman testing (see
+[docs/local-dev.md](docs/local-dev.md#snapshot-every-main-commit)). On a tag
+(`v0.2.0`) the `release` job uploads the JAR to the GitLab **generic package
+registry**:
 
 ```
 /api/v4/projects/mkoese%2Fopenfire-authprovider/packages/generic/openfire-authprovider/<tag>/openfire-authprovider-<version>.jar
