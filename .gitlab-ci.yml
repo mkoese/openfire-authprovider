@@ -1,0 +1,59 @@
+# Openfire AuthProvider - GitLab CI/CD Pipeline
+#
+# build:    mvn verify on every push/MR (Openfire artifacts come directly from
+#           igniterealtime.org archiva -- declared in pom.xml)
+# snapshot: every main commit republishes the newest jar under the stable
+#           'snapshot' label -- for LOCAL podman testing only. lib.txt accepts
+#           released, sha256-pinned versions; a snapshot never enters an image.
+# release:  on tag (v0.1.0), uploads the JAR to the GitLab generic package
+#           registry and prints the ready-to-paste lib.txt line for the
+#           openfire-oci repo.
+
+stages: [build, release]
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+build:
+  stage: build
+  image: registry.access.redhat.com/ubi9/openjdk-17:1.24
+  cache:
+    key: maven
+    paths:
+      - .m2/repository
+  script:
+    - mvn -B verify
+    - sha256sum target/openfire-authprovider-*.jar
+  artifacts:
+    paths:
+      - target/openfire-authprovider-*.jar
+    expire_in: 1 week
+
+snapshot:
+  stage: release
+  image: registry.access.redhat.com/ubi9/ubi-minimal:9.7
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - JAR=$(ls target/openfire-authprovider-*.jar)
+    - |
+      curl -fsSL --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --upload-file "${JAR}" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/openfire-authprovider/snapshot/openfire-authprovider-snapshot.jar"
+    - echo "Snapshot published from commit ${CI_COMMIT_SHORT_SHA} (local testing only):"
+    - sha256sum "${JAR}"
+
+release:
+  stage: release
+  image: registry.access.redhat.com/ubi9/ubi-minimal:9.7
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - VERSION="${CI_COMMIT_TAG#v}"
+    - |
+      curl -fsSL --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --upload-file "target/openfire-authprovider-${VERSION}.jar" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/openfire-authprovider/${CI_COMMIT_TAG}/openfire-authprovider-${VERSION}.jar"
+    - SHA=$(sha256sum "target/openfire-authprovider-${VERSION}.jar" | cut -d' ' -f1)
+    - echo "Published ${CI_COMMIT_TAG} -- lib.txt line for openfire-oci (copy verbatim):"
+    - echo "openfire-authprovider|https://gitlab.com/api/v4/projects/mkoese%2Fopenfire-authprovider/packages/generic/openfire-authprovider/${CI_COMMIT_TAG}/openfire-authprovider-${VERSION}.jar|${SHA}"

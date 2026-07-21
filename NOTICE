@@ -1,0 +1,9 @@
+Openfire AD-Gated Auth Provider
+Copyright 2026 Mikail Koese
+
+This product includes the following third-party software:
+
+Openfire XMPP Server (compile-time API, scope: provided)
+  Copyright 2004-2025 Ignite Realtime Foundation
+  Licensed under the Apache License, Version 2.0
+  https://github.com/igniterealtime/Openfire

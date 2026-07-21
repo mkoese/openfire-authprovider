@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.mkoese.openfire</groupId>
+  <artifactId>openfire-authprovider</artifactId>
+  <version>0.2.0</version>
+  <packaging>jar</packaging>
+
+  <name>Openfire AD-Gated Auth Provider</name>
+  <description>
+    Custom Openfire AuthProvider: Active Directory existence gate, JIT account
+    creation bootstrapped via AD bind, local DB password hashes (SCRAM),
+    password policy, and GSSAPI authorization policy with JIT provisioning.
+    Ships as a plain JAR in OPENFIRE_HOME/lib (not a plugin).
+  </description>
+  <url>https://gitlab.com/mkoese/openfire-authprovider</url>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <openfire.version>5.1.1</openfire.version>
+    <junit.version>5.11.4</junit.version>
+    <mockito.version>5.15.2</mockito.version>
+  </properties>
+
+  <repositories>
+    <!-- Openfire 5.x artifacts are not on Maven Central -->
+    <repository>
+      <id>igniterealtime</id>
+      <name>Ignite Realtime Repository</name>
+      <url>https://igniterealtime.org/archiva/repository/maven/</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <!-- provided: Openfire server supplies these classes at runtime -->
+    <dependency>
+      <groupId>org.igniterealtime.openfire</groupId>
+      <artifactId>xmppserver</artifactId>
+      <version>${openfire.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <!-- Openfire brings the log4j2 SLF4J binding; on the test classpath it
+             would win over logback and break LoggingSafetyTest's capture. It is
+             provided by the server at runtime, so excluding it is test-only. -->
+        <exclusion>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-slf4j2-impl</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- test-only SLF4J binding, so LoggingSafetyTest can capture log output
+         (Openfire supplies the binding at runtime; slf4j-api is 2.0.x) -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.5.16</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>
